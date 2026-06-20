@@ -1,4 +1,3 @@
-
 import axios from "axios";
 
 export const TOKEN_STORAGE_KEY = "acc_erp_auth_token";
@@ -14,23 +13,22 @@ const api = axios.create({
   timeout: 120000,
 });
 
+// Only these paths skip the token header
 function isPublicPath(url) {
   const u = (url || "").toString();
   return (
     u.includes("/auth/login") ||
     u.includes("/auth/register") ||
-    u.includes("/health") ||
-    u.includes("/sales/")
+    u.includes("/health")
   );
 }
 
 api.interceptors.request.use((config) => {
-  if (isPublicPath(config.url)) {
-    return config;
-  }
-  const token = localStorage.getItem(TOKEN_STORAGE_KEY);
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
+  if (!isPublicPath(config.url)) {
+    const token = localStorage.getItem(TOKEN_STORAGE_KEY);
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
   }
   return config;
 });

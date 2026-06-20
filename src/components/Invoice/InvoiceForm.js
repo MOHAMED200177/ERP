@@ -67,7 +67,6 @@ const InvoiceForm = () => {
     load();
   }, []);
 
-  const selectedCustomer = customers.find((c) => c.name === formData.name);
 
   const handleFieldChange = (field, value) =>
     setFormData((p) => ({ ...p, [field]: DOMPurify.sanitize(value) }));

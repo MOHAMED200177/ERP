@@ -21,8 +21,7 @@ const TopProducts = () => {
     try {
       const res = await api.post("/sales/top-products", buildSalesReportPayload(filters));
       const data = res.data?.data ?? {};
-      setProducts(data.products ?? []);
-      setSummary(data.summary ?? {});
+      setProducts(data.products ?? []); setSummary(data.summary ?? {});
     } catch (err) {
       setError(extractApiError(err, "Failed to load top products"));
       setProducts([]); setSummary({});
@@ -31,7 +30,7 @@ const TopProducts = () => {
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
-  const handleFilterChange = (e) => setFilters((p) => ({ ...p, [e.target.name]: e.target.value }));
+  const handleChange = (e) => setFilters((p) => ({ ...p, [e.target.name]: e.target.value }));
 
   const chartData = useMemo(() => {
     if (!products.length) return null;
@@ -52,23 +51,23 @@ const TopProducts = () => {
       <PageHeader title="Top Products" subtitle="Best-selling products report" />
 
       <FilterBar onSubmit={(e) => { e.preventDefault(); fetchData(); }}>
-        <div className="form-group" style={{ minWidth: 160 }}>
+        <div className="form-group" style={{ minWidth: 150 }}>
           <label className="form-label">Start Date</label>
-          <input type="date" name="startDate" className="form-control" value={filters.startDate} onChange={handleFilterChange} required />
+          <input type="date" name="startDate" className="form-control" value={filters.startDate} onChange={handleChange} required />
         </div>
-        <div className="form-group" style={{ minWidth: 160 }}>
+        <div className="form-group" style={{ minWidth: 150 }}>
           <label className="form-label">End Date</label>
-          <input type="date" name="endDate" className="form-control" value={filters.endDate} onChange={handleFilterChange} required />
+          <input type="date" name="endDate" className="form-control" value={filters.endDate} onChange={handleChange} required />
         </div>
-        <div className="form-group" style={{ minWidth: 120 }}>
+        <div className="form-group" style={{ minWidth: 100 }}>
           <label className="form-label">Limit</label>
-          <select name="limit" className="form-control" value={filters.limit} onChange={handleFilterChange}>
+          <select name="limit" className="form-control" value={filters.limit} onChange={handleChange}>
             {[5,10,20,50].map((n) => <option key={n}>{n}</option>)}
           </select>
         </div>
-        <div className="form-group" style={{ minWidth: 140 }}>
+        <div className="form-group" style={{ minWidth: 130 }}>
           <label className="form-label">Sort By</label>
-          <select name="sortBy" className="form-control" value={filters.sortBy} onChange={handleFilterChange}>
+          <select name="sortBy" className="form-control" value={filters.sortBy} onChange={handleChange}>
             <option value="quantity">Quantity</option>
             <option value="revenue">Revenue</option>
           </select>
@@ -78,19 +77,21 @@ const TopProducts = () => {
 
       {!products.length ? <ReportEmpty /> : (
         <>
-          <div className="stats-row" style={{ marginBottom: "var(--space-5)" }}>
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill,minmax(150px,1fr))", gap: "var(--space-4)", marginBottom: "var(--space-5)" }}>
             {[
-              { label: "Total Products",  value: summary.totalUniqueProducts || products.length, icon: "📦" },
-              { label: "Total Revenue",   value: formatCurrency(summary.totalRevenue), icon: "💹", iconBg: "rgba(99,102,241,0.12)" },
-              { label: "Total Sold",      value: summary.totalQuantitySold || "—", icon: "🔢", iconBg: "rgba(16,185,129,0.12)" },
-              { label: "Total Returns",   value: summary.totalReturns || 0, icon: "↩️", iconBg: "rgba(239,68,68,0.12)" },
+              { label: "Unique Products",  value: summary.totalUniqueProducts || products.length, icon: "📦" },
+              { label: "Total Revenue",    value: formatCurrency(summary.totalRevenue), icon: "💹", iconBg: "rgba(99,102,241,0.12)" },
+              { label: "Total Qty Sold",   value: toNumber(summary.totalQuantitySold), icon: "🔢", iconBg: "rgba(16,185,129,0.12)" },
+              { label: "Total Returns",    value: toNumber(summary.totalReturns) || 0,  icon: "↩️", iconBg: "rgba(239,68,68,0.12)" },
             ].map((s, i) => (
-              <div key={i} className="stat-card">
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
+              <div key={i} className="stat-card" style={{ minWidth: 0, overflow: "hidden" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", gap: 8 }}>
                   <span className="stat-card-label">{s.label}</span>
-                  <div className="stat-card-icon" style={{ background: s.iconBg || "var(--bg-elevated)" }}>{s.icon}</div>
+                  {s.icon && <div className="stat-card-icon" style={{ background: s.iconBg || "var(--bg-elevated)", flexShrink: 0 }}>{s.icon}</div>}
                 </div>
-                <div className="stat-card-value">{s.value}</div>
+                <div style={{ fontFamily: "var(--font-display)", fontWeight: 700, fontSize: "clamp(1.5rem,2.5vw,2.2rem)", color: "var(--text-primary)", wordBreak: "break-word", lineHeight: 1.25, marginTop: "var(--space-2)" }}>
+                  {s.value}
+                </div>
               </div>
             ))}
           </div>
@@ -98,13 +99,16 @@ const TopProducts = () => {
           {chartData && (
             <div className="card" style={{ marginBottom: "var(--space-5)" }}>
               <div className="card-header"><h3 className="card-title">Revenue vs Quantity</h3></div>
-              <div style={{ height: 300 }}>
+              <div style={{ height: 300, position: "relative" }}>
                 <Bar data={chartData} options={{
                   responsive: true, maintainAspectRatio: false,
-                  plugins: { legend: { labels: { color: "#94a3b8" } } },
+                  plugins: {
+                    legend: { labels: { color: "#94a3b8" } },
+                    tooltip: { callbacks: { label: (ctx) => ctx.datasetIndex === 0 ? ` Revenue: ${formatCurrency(ctx.parsed.y)}` : ` Qty: ${ctx.parsed.y}` } },
+                  },
                   scales: {
-                    x: { ticks: { color: "#64748b" }, grid: { color: "#1e2030" } },
-                    y:  { ticks: { color: "#64748b" }, grid: { color: "#1e2030" } },
+                    x:  { ticks: { color: "#64748b", maxRotation: 30 }, grid: { color: "#1e2030" } },
+                    y:  { ticks: { color: "#64748b", callback: (v) => formatCurrency(v) }, grid: { color: "#1e2030" } },
                     y1: { position: "right", ticks: { color: "#64748b" }, grid: { drawOnChartArea: false } },
                   },
                 }} />
@@ -120,12 +124,12 @@ const TopProducts = () => {
                 <tbody>
                   {products.map((p, i) => (
                     <tr key={i}>
-                      <td style={{ color: "var(--text-muted)" }}>{i + 1}</td>
+                      <td style={{ color: "var(--text-muted)", fontVariantNumeric: "tabular-nums" }}>{i + 1}</td>
                       <td style={{ fontWeight: 500 }}>{p.productName}</td>
-                      <td>{toNumber(p.totalQuantitySold)}</td>
-                      <td style={{ color: "var(--success)" }}>{formatCurrency(p.grossRevenue)}</td>
+                      <td style={{ fontVariantNumeric: "tabular-nums" }}>{toNumber(p.totalQuantitySold)}</td>
+                      <td style={{ color: "var(--success)", fontWeight: 500 }}>{formatCurrency(p.grossRevenue)}</td>
                       <td style={{ color: "var(--danger)" }}>{toNumber(p.totalReturns) || 0}</td>
-                      <td style={{ color: "var(--brand-400)", fontWeight: 600 }}>{formatCurrency(p.netRevenue)}</td>
+                      <td style={{ color: "var(--brand-400)", fontWeight: 700 }}>{formatCurrency(p.netRevenue)}</td>
                     </tr>
                   ))}
                 </tbody>

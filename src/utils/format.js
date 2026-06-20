@@ -1,6 +1,5 @@
-
 const CURRENCY = "EGP";
-const LOCALE = "en-US";
+const LOCALE   = "en-US";
 
 export function toNumber(value) {
   if (value === null || value === undefined || value === "") return 0;
@@ -8,18 +7,38 @@ export function toNumber(value) {
   return Number.isFinite(n) ? n : 0;
 }
 
+/**
+ * Format currency — no .00, no K shortening, clean integer display
+ * e.g. 2800.00 → "EGP 2800"   |   2850.50 → "EGP 2850.50"
+ */
 export function formatCurrency(amount, currency = CURRENCY) {
+  const n = toNumber(amount);
+  // Show decimals only when they actually exist
+  const hasDecimals = n % 1 !== 0;
+  const formatted = new Intl.NumberFormat(LOCALE, {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+  }).format(n);
+  return `${currency} ${formatted}`;
+}
+
+/**
+ * Format a plain number — no currency symbol, no .00
+ */
+export function formatNumber(value) {
+  const n = toNumber(value);
+  const hasDecimals = n % 1 !== 0;
   return new Intl.NumberFormat(LOCALE, {
-    style: "currency",
-    currency,
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  }).format(toNumber(amount));
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: hasDecimals ? 2 : 0,
+  }).format(n);
 }
 
 export function formatPercent(value) {
   if (typeof value === "string" && value.includes("%")) return value;
-  return `${toNumber(value).toFixed(1)}%`;
+  const n = toNumber(value);
+  const hasDecimals = n % 1 !== 0;
+  return `${hasDecimals ? n.toFixed(1) : Math.round(n)}%`;
 }
 
 export function formatDate(value, options = {}) {
@@ -27,10 +46,7 @@ export function formatDate(value, options = {}) {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "—";
   return date.toLocaleDateString(LOCALE, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-    ...options,
+    year: "numeric", month: "short", day: "numeric", ...options,
   });
 }
 
@@ -41,10 +57,10 @@ export function toISODateRange(dateString, endOfDay = false) {
 }
 
 export function defaultDateRange() {
-  const now = new Date();
+  const now   = new Date();
   const start = new Date(now.getFullYear(), 0, 1);
   return {
     startDate: start.toISOString().split("T")[0],
-    endDate: now.toISOString().split("T")[0],
+    endDate:   now.toISOString().split("T")[0],
   };
 }

@@ -3,7 +3,7 @@ import api from "../../api/client";
 import { useNavigate } from "react-router-dom";
 import PageHeader from "../PageHeader";
 import {
-  PageLoading, Alert, EmptyState, StatusBadge,
+  PageLoading, Alert, EmptyState,
   Currency, ConfirmDialog, SortTh, Pagination, StatsRow,
 } from "../common/UI";
 
@@ -68,7 +68,6 @@ const CustomerList = () => {
     finally { setConfirmDelete(null); }
   };
 
-  const fmt = (d) => d ? new Date(d).toLocaleDateString("en-US", { year: "numeric", month: "short", day: "numeric" }) : "—";
 
   const stats = useMemo(() => {
     const totalBal = customers.reduce((s, c) => s + (c.balance || 0), 0);

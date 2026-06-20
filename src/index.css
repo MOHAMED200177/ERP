@@ -801,3 +801,115 @@ textarea.form-control { resize: vertical; min-height: 80px; }
   .sidebar-toggle { display: flex; align-items: center; justify-content: center; }
 }
 
+
+/* ============================================================
+   STAT CARD — overflow prevention (CRITICAL FIX)
+   ============================================================ */
+.stat-card-value {
+  font-size: clamp(1.6rem, 3vw, 2.4rem);
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: 1.2;
+  min-width: 0;
+}
+
+.stat-card {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ============================================================
+   REPORT STAT CARDS — full overflow fix
+   ============================================================ */
+.stats-row {
+  min-width: 0;
+}
+.stats-row > * {
+  min-width: 0;
+  overflow: hidden;
+}
+
+/* ============================================================
+   TABLE — sticky header
+   ============================================================ */
+.table-wrapper {
+  max-height: 600px;
+  overflow-y: auto;
+}
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--bg-card-2);
+}
+
+/* ============================================================
+   TOAST ANIMATION
+   ============================================================ */
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: none; }
+}
+
+/* ============================================================
+   SIDEBAR — responsive fix
+   ============================================================ */
+@media (max-width: 768px) {
+  .app-sidebar {
+    box-shadow: var(--shadow-xl);
+  }
+}
+
+/* ============================================================
+   TOPBAR — always visible on mobile
+   ============================================================ */
+@media (min-width: 769px) {
+  .app-topbar { display: none; }
+}
+
+/* ============================================================
+   CONTENT AREA — proper padding
+   ============================================================ */
+.content-area {
+  padding: var(--space-6) var(--space-6);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* ============================================================
+   PIE / DOUGHNUT CHART — responsive container
+   ============================================================ */
+.chart-wrap {
+  position: relative;
+  width: 100%;
+}
+
+/* ============================================================
+   REPORT FILTER BAR
+   ============================================================ */
+.filter-bar-card .form-group {
+  flex: 1;
+  min-width: 140px;
+}
+
+/* ============================================================
+   NUMBER DISPLAY — tabular, no overflow
+   ============================================================ */
+.num {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+/* ============================================================
+   BADGE — no shrink
+   ============================================================ */
+.badge {
+  flex-shrink: 0;
+  white-space: nowrap;
+}

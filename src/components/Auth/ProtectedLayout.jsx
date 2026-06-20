@@ -1,5 +1,5 @@
 import React, { Suspense, useState } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, Outlet } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 import Footer from "../Footer";
 
@@ -7,7 +7,6 @@ const ProtectedLayout = () => {
   const { token, loading } = useAuth();
   const requireAuth = process.env.REACT_APP_REQUIRE_AUTH !== "false";
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const location = useLocation();
 
   if (requireAuth && loading) {
     return (

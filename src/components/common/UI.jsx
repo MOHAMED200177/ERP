@@ -1,7 +1,5 @@
-/**
- * Shared UI primitives — used across all pages
- */
 import React from "react";
+import { formatCurrency } from "../../utils/format";
 
 /* ── Loading ─────────────────────────────────────── */
 export const Spinner = ({ size = 32, style }) => (
@@ -22,33 +20,40 @@ export const PageLoading = ({ message = "Loading…" }) => (
 export const SkeletonRow = ({ cols = 5 }) => (
   <tr>
     {Array.from({ length: cols }).map((_, i) => (
-      <td key={i}>
-        <div className="skeleton" style={{ height: 16, borderRadius: 4 }} />
-      </td>
+      <td key={i}><div className="skeleton" style={{ height: 16, borderRadius: 4 }} /></td>
     ))}
   </tr>
 );
 
 /* ── Alert Banner ─────────────────────────────────── */
 export const Alert = ({ type = "error", children, onClose }) => {
-  const map = {
-    error: "alert-error", success: "alert-success",
-    warning: "alert-warning", info: "alert-info",
-  };
+  const map = { error: "alert-error", success: "alert-success", warning: "alert-warning", info: "alert-info" };
   return (
-    <div className={`alert ${map[type]}`} role="alert">
+    <div className={`alert ${map[type] || "alert-info"}`} role="alert">
       <span style={{ flex: 1 }}>{children}</span>
       {onClose && (
-        <button
-          type="button"
-          onClick={onClose}
-          style={{ background: "none", border: "none", cursor: "pointer",
-            color: "inherit", padding: "0 4px", fontSize: "1.4rem" }}
-          aria-label="Dismiss"
-        >
+        <button type="button" onClick={onClose} aria-label="Dismiss"
+          style={{ background: "none", border: "none", cursor: "pointer", color: "inherit", padding: "0 4px", fontSize: "1.6rem", lineHeight: 1 }}>
           ×
         </button>
       )}
+    </div>
+  );
+};
+
+/* ── Toast Notification ──────────────────────────── */
+export const Toast = ({ toasts, remove }) => {
+  if (!toasts?.length) return null;
+  return (
+    <div style={{ position: "fixed", bottom: 24, right: 24, zIndex: 9999, display: "flex", flexDirection: "column", gap: 8, maxWidth: 360 }}>
+      {toasts.map((t) => (
+        <div key={t.id} className={`alert ${t.type === "success" ? "alert-success" : t.type === "warning" ? "alert-warning" : "alert-error"}`}
+          style={{ boxShadow: "var(--shadow-lg)", animation: "slideInRight 0.2s ease", cursor: "pointer" }}
+          onClick={() => remove(t.id)}>
+          <span style={{ flex: 1 }}>{t.message}</span>
+          <span style={{ fontSize: "1.4rem", opacity: 0.7 }}>×</span>
+        </div>
+      ))}
     </div>
   );
 };
@@ -57,49 +62,43 @@ export const Alert = ({ type = "error", children, onClose }) => {
 export const EmptyState = ({ icon = "📭", title, description, action }) => (
   <div className="empty-state">
     <div className="empty-state-icon">{icon}</div>
-    {title && <p className="empty-state-title">{title}</p>}
+    {title       && <p className="empty-state-title">{title}</p>}
     {description && <p className="empty-state-desc">{description}</p>}
     {action}
   </div>
 );
 
 /* ── Status Badge ─────────────────────────────────── */
-const STATUS_BADGE_MAP = {
-  paid:           "badge-success",
-  active:         "badge-success",
-  completed:      "badge-success",
-  unpaid:         "badge-danger",
-  overdue:        "badge-danger",
-  cancelled:      "badge-danger",
-  partially_paid: "badge-warning",
-  partial:        "badge-warning",
-  pending:        "badge-warning",
-  draft:          "badge-neutral",
+const STATUS_MAP = {
+  paid: "badge-success", active: "badge-success", completed: "badge-success",
+  unpaid: "badge-danger", overdue: "badge-danger", cancelled: "badge-danger",
+  partially_paid: "badge-warning", partial: "badge-warning", pending: "badge-warning",
+  draft: "badge-neutral",
 };
-
 export const StatusBadge = ({ status }) => {
-  const cls = STATUS_BADGE_MAP[status?.toLowerCase()] || "badge-neutral";
+  const cls   = STATUS_MAP[status?.toLowerCase()] || "badge-neutral";
   const label = status ? status.replace(/_/g, " ") : "—";
   return <span className={`badge ${cls}`}>{label}</span>;
 };
 
-/* ── Currency ─────────────────────────────────────── */
-export const Currency = ({ amount, currency = "EGP" }) => (
+/* ── Currency — clean, no .00 ────────────────────── */
+export const Currency = ({ amount }) => (
   <span style={{ fontVariantNumeric: "tabular-nums", fontWeight: 500 }}>
-    {currency} {(+amount || 0).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+    {formatCurrency(amount)}
   </span>
 );
 
 /* ── Confirmation Modal ───────────────────────────── */
-export const ConfirmDialog = ({ title, message, onConfirm, onCancel, danger }) => (
-  <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-title">
-    <div className="modal" style={{ maxWidth: 400 }}>
+export const ConfirmDialog = ({ title, message, onConfirm, onCancel, danger, confirmLabel }) => (
+  <div className="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="confirm-title"
+    onClick={(e) => e.target === e.currentTarget && onCancel()}>
+    <div className="modal" style={{ maxWidth: 420 }}>
       <h3 id="confirm-title" style={{ margin: "0 0 var(--space-3)", fontSize: "1.7rem" }}>{title}</h3>
-      <p style={{ color: "var(--text-secondary)", fontSize: "1.4rem", margin: "0 0 var(--space-6)" }}>{message}</p>
+      <p style={{ color: "var(--text-secondary)", fontSize: "1.4rem", margin: "0 0 var(--space-6)", lineHeight: 1.6 }}>{message}</p>
       <div style={{ display: "flex", gap: "var(--space-3)", justifyContent: "flex-end" }}>
         <button className="btn btn-secondary" onClick={onCancel}>Cancel</button>
         <button className={`btn ${danger ? "btn-danger" : "btn-primary"}`} onClick={onConfirm}>
-          {danger ? "Delete" : "Confirm"}
+          {confirmLabel || (danger ? "Delete" : "Confirm")}
         </button>
       </div>
     </div>
@@ -112,48 +111,23 @@ export const SortTh = ({ field, sort, onSort, children }) => (
     <span style={{ display: "inline-flex", alignItems: "center", gap: 4 }}>
       {children}
       {sort.field === field && (
-        <span style={{ fontSize: "0.9em", opacity: 0.7 }}>
-          {sort.dir === "asc" ? "↑" : "↓"}
-        </span>
+        <span style={{ fontSize: "0.85em", opacity: 0.6 }}>{sort.dir === "asc" ? "↑" : "↓"}</span>
       )}
     </span>
   </th>
 );
 
-/* ── Searchable Select ───────────────────────────── */
-export const SearchableSelect = ({
-  id, value, onChange, options, placeholder = "Select…",
-  loading: isLoading, disabled, label, required,
-}) => (
-  <div className="form-group">
-    {label && <label htmlFor={id} className="form-label">{label}{required && " *"}</label>}
-    <select
-      id={id}
-      className="form-control"
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      disabled={disabled || isLoading}
-      required={required}
-    >
-      <option value="">{isLoading ? "Loading…" : placeholder}</option>
-      {options.map((opt) => (
-        <option key={opt.value} value={opt.value}>{opt.label}</option>
-      ))}
-    </select>
-  </div>
-);
-
 /* ── Pagination ──────────────────────────────────── */
 export const Pagination = ({ page, total, perPage, onPage, onPerPage }) => {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
-  const start = Math.min((page - 1) * perPage + 1, total);
+  const start = total === 0 ? 0 : Math.min((page - 1) * perPage + 1, total);
   const end   = Math.min(page * perPage, total);
 
   const pages = [];
-  const max = 5;
-  let s = Math.max(1, page - Math.floor(max / 2));
-  let e = Math.min(totalPages, s + max - 1);
-  if (e - s + 1 < max) s = Math.max(1, e - max + 1);
+  const maxVisible = 5;
+  let s = Math.max(1, page - Math.floor(maxVisible / 2));
+  let e = Math.min(totalPages, s + maxVisible - 1);
+  if (e - s + 1 < maxVisible) s = Math.max(1, e - maxVisible + 1);
   for (let i = s; i <= e; i++) pages.push(i);
 
   return (
@@ -162,29 +136,18 @@ export const Pagination = ({ page, total, perPage, onPage, onPerPage }) => {
         {total === 0 ? "No results" : `${start}–${end} of ${total}`}
       </span>
       <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center", flexWrap: "wrap" }}>
-        <select
-          className="form-control"
-          style={{ width: "auto", padding: "4px 28px 4px 8px" }}
-          value={perPage}
-          onChange={(e) => onPerPage(Number(e.target.value))}
-          aria-label="Rows per page"
-        >
-          {[10, 20, 50].map((n) => <option key={n}>{n}</option>)}
+        <select className="form-control" style={{ width: "auto", padding: "4px 28px 4px 8px" }}
+          value={perPage} onChange={(e) => onPerPage(Number(e.target.value))} aria-label="Rows per page">
+          {[10, 20, 50, 100].map((n) => <option key={n}>{n}</option>)}
         </select>
         <div className="pagination-pages">
-          <button className="page-btn" onClick={() => onPage(1)} disabled={page === 1} aria-label="First">«</button>
-          <button className="page-btn" onClick={() => onPage(page - 1)} disabled={page === 1} aria-label="Previous">‹</button>
+          <button className="page-btn" onClick={() => onPage(1)}          disabled={page === 1}          aria-label="First">«</button>
+          <button className="page-btn" onClick={() => onPage(page - 1)}   disabled={page === 1}          aria-label="Prev">‹</button>
           {pages.map((p) => (
-            <button
-              key={p}
-              className={`page-btn${p === page ? " active" : ""}`}
-              onClick={() => onPage(p)}
-              aria-current={p === page ? "page" : undefined}
-            >
-              {p}
-            </button>
+            <button key={p} className={`page-btn${p === page ? " active" : ""}`}
+              onClick={() => onPage(p)} aria-current={p === page ? "page" : undefined}>{p}</button>
           ))}
-          <button className="page-btn" onClick={() => onPage(page + 1)} disabled={page === totalPages} aria-label="Next">›</button>
+          <button className="page-btn" onClick={() => onPage(page + 1)}   disabled={page === totalPages} aria-label="Next">›</button>
           <button className="page-btn" onClick={() => onPage(totalPages)} disabled={page === totalPages} aria-label="Last">»</button>
         </div>
       </div>
@@ -205,7 +168,10 @@ export const StatsRow = ({ stats }) => (
             </div>
           )}
         </div>
-        <div className="stat-card-value">{s.value}</div>
+        <div className="stat-card-value"
+          style={{ fontSize: String(s.value).length > 10 ? "1.8rem" : undefined, wordBreak: "break-word", overflowWrap: "break-word" }}>
+          {s.value}
+        </div>
         {s.sub && <div className="stat-card-sub">{s.sub}</div>}
       </div>
     ))}
